@@ -1,6 +1,7 @@
 package com.huncho.tripubank.customer.services;
 
 import com.huncho.tripubank.customer.RequestAndResponse.AuthenticationResponse;
+import com.huncho.tripubank.customer.RequestAndResponse.BankResponse;
 import com.huncho.tripubank.customer.RequestAndResponse.CreationRequest;
 import com.huncho.tripubank.customer.RequestAndResponse.UpdateProfileRequest;
 import com.huncho.tripubank.customer.dtos.UserDto;
@@ -19,4 +20,6 @@ public interface UserService {
 
 UserDto updateUserProfile( long id, UpdateProfileRequest updateProfileRequest) throws TripuBankException;
     UserDto updateFewFields (long id, UpdateProfileRequest updateProfileRequest) throws TripuBankException;
+
+    BankResponse deleteAUser(long id) throws TripuBankException;
 }

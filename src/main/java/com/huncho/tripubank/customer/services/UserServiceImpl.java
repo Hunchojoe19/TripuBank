@@ -1,6 +1,7 @@
 package com.huncho.tripubank.customer.services;
 
 import com.huncho.tripubank.customer.RequestAndResponse.AuthenticationResponse;
+import com.huncho.tripubank.customer.RequestAndResponse.BankResponse;
 import com.huncho.tripubank.customer.RequestAndResponse.CreationRequest;
 import com.huncho.tripubank.customer.RequestAndResponse.UpdateProfileRequest;
 import com.huncho.tripubank.customer.dtos.EmailDetails;
@@ -13,6 +14,7 @@ import com.huncho.tripubank.customer.utils.AccountNumberGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -36,6 +38,9 @@ public class UserServiceImpl implements UserService{
     ModelMapper modelMapper;
     @Autowired
     JwtService jwtService;
+    @Autowired
+    BCryptPasswordEncoder bCryptPasswordEncoder;
+
 
     @Override
     public AuthenticationResponse createUser(CreationRequest creationRequest) throws TripuBankException {
@@ -47,8 +52,8 @@ public class UserServiceImpl implements UserService{
                 .lastName(creationRequest.getLastName())
                 .email(creationRequest.getEmail())
                 .address(creationRequest.getAddress())
-//                .password(bCryptPasswordEncoder.encode(creationRequest.getPassword()))
-                .password(creationRequest.getPassword())
+                .password(bCryptPasswordEncoder.encode(creationRequest.getPassword()))
+//                .password(creationRequest.getPassword())
                 .phone(creationRequest.getPhone())
                 .gender(creationRequest.getGender())
                 .role(Role.USER)
@@ -81,6 +86,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserDto findUserById(long id) throws TripuBankException {
       User user = userRepository.findById(id).orElseThrow(()-> new TripuBankException("User Not Found", 404));
+      log.error("User not found");
       return modelMapper.map(user, UserDto.class);
     }
 
@@ -118,10 +124,6 @@ public class UserServiceImpl implements UserService{
         return modelMapper.map(user, UserDto.class);
     }
 
-//    @Override
-//    public User updateAllFields(long id, UpdateProfileRequest updateProfileRequest) throws TripuBankException {
-//        return null;
-//    }
 
     @Override
     public UserDto updateFewFields(long id, UpdateProfileRequest updateProfileRequest) throws TripuBankException {
@@ -143,20 +145,37 @@ public class UserServiceImpl implements UserService{
             !Objects.equals(user.getEmail(), updateProfileRequest.getEmail())){
             Optional <Boolean> userToCheck = Optional.ofNullable(userRepository.existsUserByEmail(updateProfileRequest.getEmail()));
             if (userToCheck.isPresent()){
-
+                throw new TripuBankException("Email Already Exists", 400);
             }
             user.setEmail(updateProfileRequest.getEmail());
         }
         if (updateProfileRequest.getPassword() != null &&
             updateProfileRequest.getPassword().length() > 0 &&
             !Objects.equals(user.getPassword(), updateProfileRequest.getPassword())){
-            user.setEmail(updateProfileRequest.getPassword());
+            user.setPassword(updateProfileRequest.getPassword());
         }
         if (updateProfileRequest.getPhone() != null &&
             updateProfileRequest.getPhone().length() > 0 &&
             !Objects.equals(user.getPhone(), updateProfileRequest.getPhone())){
-            user.setEmail(updateProfileRequest.getPhone());
+            user.setPhone(updateProfileRequest.getPhone());
+        }
+        if (updateProfileRequest.getAddress() != null &&
+            updateProfileRequest.getAddress().length() > 0 &&
+            !Objects.equals(user.getAddress(), updateProfileRequest.getAddress())){
+            user.setAddress(updateProfileRequest.getAddress());
         }
         return modelMapper.map(user, UserDto.class);
+    }
+
+    @Override
+    public BankResponse deleteAUser(long id) throws TripuBankException {
+        User user = userRepository.findById(id).orElseThrow(()-> new TripuBankException("User with id "+ id + " does not exist", 400));
+         userRepository.deleteById(user.getId());
+         return BankResponse.builder()
+                 .responseCode("200")
+                 .responseMessage("User deleted")
+                 .accountInfo(null)
+                 .data(null)
+                 .build();
     }
 }

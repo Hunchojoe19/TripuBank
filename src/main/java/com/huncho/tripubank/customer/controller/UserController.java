@@ -11,6 +11,7 @@ import com.huncho.tripubank.customer.services.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -22,6 +23,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("api/v1/users")
+@CrossOrigin(origins = "http://localhost:9700")
+@Slf4j
 public class UserController {
 
     @Autowired
@@ -121,6 +124,15 @@ public class UserController {
                     .build();
             return new ResponseEntity<>(bankResponse, HttpStatus.valueOf(e.getStatusCode()));
         }
+    }
+    @DeleteMapping("/delete/{id}")
+    ResponseEntity <?> deleteUser(@PathVariable("id") long id) throws TripuBankException{
+        userService.deleteAUser(id);
+        BankResponse bankResponse = BankResponse.builder()
+                .data(null)
+                .accountInfo(null)
+                .build();
+        return new ResponseEntity<>(bankResponse, HttpStatus.OK);
     }
 
 }
